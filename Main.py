@@ -6,8 +6,7 @@ import json
 import importlib
 
 # fixme why  static_url_path not work？？
-app = Flask(__name__, static_url_path='')  # , root_path='/'
-
+app = Flask(__name__)  #  ,static_url_path='', root_path='/'
 
 @app.route('/')
 def index():
@@ -66,5 +65,6 @@ def newCheckFail(e):
 # all url mapping
 print (app.url_map)
 
+# 上线需要把debug=true去掉
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5000)

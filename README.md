@@ -2,7 +2,7 @@
 python flask code template
 
 # test
-ÕıÈ·Àı×Ó£º
+æ­£ç¡®ä¾‹å­ï¼š
 ```
 curl -i -X POST \
    -H "Content-Type:application/json" \
@@ -13,7 +13,7 @@ curl -i -X POST \
  'http://localhost:5000/invoke/w3/user'
  ```
  
- Òì³£Àı×Ó£º
+ å¼‚å¸¸ä¾‹å­ï¼š
  ```
  curl -i -X POST \
    -H "Content-Type:application/json" \
