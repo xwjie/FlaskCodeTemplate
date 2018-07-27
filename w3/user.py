@@ -3,4 +3,7 @@
 def invoke(data):
     print("user invoke, data:" , data)
 
-    return {"data":"ok", "code":0}
+    if(data['name'] == ""):
+        raise Exception("name is null")
+
+    return 12345
