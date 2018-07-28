@@ -4,9 +4,9 @@
 from flask import Flask, abort, redirect, request
 import json
 import importlib
+import  pkgutil
 
-# fixme why  static_url_path not work？？
-app = Flask(__name__)  #  ,static_url_path='', root_path='/'
+app = Flask(__name__,static_url_path='')  #  , root_path='/'
 
 @app.route('/')
 def index():
@@ -23,20 +23,32 @@ def sayHello(name):
     return '<h1> Hello,%s </h1>' % name
 
 
+@app.route('/list', methods=['get'])
+def listFeatures():
+    # 得到所有package
+    result =list(map(lambda a: a.name, filter(lambda a: a.ispkg, pkgutil.iter_modules(["."], ""))))
+
+    print (result)
+    #result = [(modelName, isPackage) for _, modelName, isPackage in pkgutil.iter_modules(["."], "")]
+
+    # 返回json数据
+    return json.dumps(newResultBean(result))
+
+
+
 # 动态调用模块功能
 @app.route('/invoke/<product>/<feature>', methods=['post'])
 def invokeFeature(product, feature):
     featureStr = product + "." + feature
-
-    # 动态载入包
-    f = importlib.import_module(featureStr)
-
-    # 得到输入参数(json格式)
-    inputData = json.loads(request.get_data())
-
-    # 调用返回结果
     try:
-        result = f.invoke(inputData)
+        # 动态载入包
+        model = importlib.import_module(featureStr)
+
+        # 得到输入参数(json格式)
+        inputData = json.loads(request.get_data())
+
+        # 调用返回结果
+        result = model.invoke(inputData)
         # 返回json数据
         return json.dumps(newResultBean(result))
     # 校验异常
