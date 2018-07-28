@@ -1,7 +1,7 @@
 #
 # 晓风轻 https://github.com/xwjie/FlaskCodeTemplate
 #
-from flask import Flask, abort, redirect, request
+from flask import Flask, abort, redirect, request, Response
 import json
 import importlib
 import  pkgutil
@@ -22,6 +22,19 @@ def sayHello(name):
 
     return '<h1> Hello,%s </h1>' % name
 
+@app.route('/login', methods=['post'])
+def login():
+    # 得到输入参数(form格式)
+    username = request.form['username']
+    password = request.form['password']
+    print (username, password)
+
+    result = False
+
+    if username =="xwjie":
+        result = True
+
+    return toJson(newResultBean(result));
 
 @app.route('/list', methods=['get'])
 def listFeatures():
@@ -32,8 +45,7 @@ def listFeatures():
     #result = [(modelName, isPackage) for _, modelName, isPackage in pkgutil.iter_modules(["."], "")]
 
     # 返回json数据
-    return json.dumps(newResultBean(result))
-
+    return toJson(newResultBean(result))
 
 
 # 动态调用模块功能
@@ -50,11 +62,15 @@ def invokeFeature(product, feature):
         # 调用返回结果
         result = model.invoke(inputData)
         # 返回json数据
-        return json.dumps(newResultBean(result))
+        return toJson(newResultBean(result))
     # 校验异常
     except Exception as e:
-        return json.dumps(newCheckFail(e))
+        return toJson(newCheckFail(e))
 
+# flask 返回json格式
+# obj to json string, 声明Content-Type为json格式
+def toJson(obj):
+    return Response(json.dumps(obj), mimetype='application/json; charset=utf-8')
 
 # 构建返回对象
 def newResultBean(data):
