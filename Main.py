@@ -1,19 +1,29 @@
 #
 # 晓风轻 https://github.com/xwjie/FlaskCodeTemplate
 #
-from flask import Flask, abort, redirect, request, Response
-import json
+from flask import Flask, abort, redirect, request, Response, session
+from flask import json
 import importlib
 import  pkgutil
+from database import db_session, init_db
+from models.User import  User
+import jsonutil
 
 app = Flask(__name__,static_url_path='')  #  , root_path='/'
+app.secret_key = b'xiaofengqing'
+
+print (app.secret_key)
+
+#  create the database
+init_db()
+
 
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
 
-@app.route('/user/<name>')
+@app.route('/hello/<name>')
 def sayHello(name):
     if name == 'baidu':
         return redirect('http://www.baidu.com')
@@ -22,19 +32,40 @@ def sayHello(name):
 
     return '<h1> Hello,%s </h1>' % name
 
+# 得到当前登陆用户
+@app.route("/user")
+def currentUser():
+    user = None
+
+    # 如果登陆了
+    if 'user' in session:
+        user = session["user"]
+
+    return toJson(newResultBean(user))
+
+#执行登陆
 @app.route('/login', methods=['post'])
 def login():
     # 得到输入参数(form格式)
     username = request.form['username']
     password = request.form['password']
+
     print (username, password)
 
-    result = False
+    user = None
 
-    if username =="xwjie":
-        result = True
+    if username is not None:
 
-    return toJson(newResultBean(result));
+        #
+        user = User(username, password)
+        db_session.add(user)
+        db_session.commit()
+
+        # 登陆后，保存到session里面
+        # user无法放进去，无法序列化
+        session['user'] = user._serialize()
+
+    return toJson(newResultBean(user));
 
 @app.route('/list', methods=['get'])
 def listFeatures():
@@ -70,7 +101,10 @@ def invokeFeature(product, feature):
 # flask 返回json格式
 # obj to json string, 声明Content-Type为json格式
 def toJson(obj):
-    return Response(json.dumps(obj), mimetype='application/json; charset=utf-8')
+    jsonStr = json.dumps(obj, cls=jsonutil.AlchemyEncoder, ) # default=serialize
+    #jsonStr = dumps(obj)
+    print ('json str:' , jsonStr)
+    return Response(jsonStr, mimetype='application/json; charset=utf-8')
 
 # 构建返回对象
 def newResultBean(data):
@@ -89,9 +123,18 @@ def newCheckFail(e):
         "msg": str(e)
     }
 
-
 # all url mapping
 print (app.url_map)
+
+
+# test
+u = User("ddd", "password")
+print (u.__dict__)
+print(toJson(newResultBean(u)))
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
 
 # 上线需要把debug=true去掉
 if __name__ == '__main__':
